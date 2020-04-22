@@ -1,11 +1,14 @@
 #include <util/bytes.h>
+#include <state/State.h>
 #include "InMemoryStateBackend.h"
 
 #define MASTER_KEY_PREFIX "master_"
+#define STATE_PORT 8005
 
 namespace state {
     InMemoryStateBackend::InMemoryStateBackend() : redis(redis::Redis::getState()),
-                                                   thisIP(util::getSystemConfig().endpointHost) {
+                                                   thisIP(util::getSystemConfig().endpointHost),
+                                                   tcpServer(STATE_PORT) {
 
     }
 
@@ -17,6 +20,8 @@ namespace state {
         const std::string masterKey = getKeyForMasterLookup(key);
         const std::vector<uint8_t> masterIPBytes = redis.get(masterKey);
         const std::string masterIP = util::bytesToString(masterIPBytes);
+
+        return masterIP;
     }
 
     std::string InMemoryStateBackend::getMasterForGet(const std::string &key) {
@@ -33,7 +38,8 @@ namespace state {
     }
 
     size_t InMemoryStateBackend::getSize(const std::string &key) {
-        // TODO - implement
+        const std::string keyMaster = getMasterForGet(key);
+
         return 0;
     }
 
@@ -112,5 +118,33 @@ namespace state {
 
         // TODO - implement
         return 0;
+    }
+
+    size_t InMemoryStateBackend::getStateSize(const std::string &user, const std::string &key) {
+        // TODO - this is gnarly, essentially a circular depdendency
+        State &globalState = state::getGlobalState();
+
+        return globalState.getStateSize(user, key);
+    }
+    
+    void InMemoryStateBackend::startServer() {
+        while(true) {
+            tcp::TCPMessage *recvMessage = tcpServer.accept();
+
+            switch(recvMessage->type) {
+                case(tcp::TCPMessageType::STATE_SIZE): {
+                    // TODO - state size
+                }
+                case(tcp::TCPMessageType::STATE_GET): {
+                    // TODO - state get
+                }
+                case(tcp::TCPMessageType::STATE_SET): {
+                    // TODO - state set
+                }
+                default: {
+                    // TODO - fail
+                }
+            }
+        }
     }
 }

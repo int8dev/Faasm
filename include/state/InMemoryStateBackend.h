@@ -2,6 +2,8 @@
 
 #include "StateBackend.h"
 #include <redis/Redis.h>
+#include <tcp/TCPClient.h>
+#include <tcp/TCPServer.h>
 
 namespace state {
     class InMemoryStateBackend final : public StateBackend {
@@ -39,12 +41,18 @@ namespace state {
         void setLong(const std::string &key, long value) override;
 
         long getLong(const std::string &key) override;
+
+        void startServer();
+
     private:
         redis::Redis &redis;
         std::string thisIP;
+        tcp::TCPServer tcpServer;
 
         std::string getMasterIP(const std::string &key);
 
         std::string getMasterForGet(const std::string &key);
+
+        size_t getStateSize(const std::string &user, const std::string &key);
     };
 }
