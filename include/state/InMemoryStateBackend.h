@@ -1,6 +1,7 @@
 #pragma once
 
 #include "StateBackend.h"
+#include <redis/Redis.h>
 
 namespace state {
     class InMemoryStateBackend final : public StateBackend {
@@ -38,5 +39,12 @@ namespace state {
         void setLong(const std::string &key, long value) override;
 
         long getLong(const std::string &key) override;
+    private:
+        redis::Redis &redis;
+        std::string thisIP;
+
+        std::string getMasterIP(const std::string &key);
+
+        std::string getMasterForGet(const std::string &key);
     };
 }
